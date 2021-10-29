@@ -1,7 +1,7 @@
 pipeline {
   environment {
     registry = "tle249/jenkin1"
-    registryCredential = "dockerhub-jenkinfile-credentials"
+    registryCredential = "dockerhub-jenkinfile-credentials
   }
   agent any
   stages {
@@ -17,22 +17,16 @@ pipeline {
         }
       }
     }
-    stage('Deploy image') { 
-22
-            steps { 
-23
-                script { 
-24
-                    docker.withRegistry( 'tle249/jekin1', registryCredential ) { 
-25
-                        dockerImage.push() 
-26
-                    }
-27
-                } 
-28
-            }
-29
-        } 
+    stage('Push image') {
+        /* Finally, we'll push the image with two tags:
+         * First, the incremental build number from Jenkins
+         * Second, the 'latest' tag. */
+            withCredentials([usernamePassword( credentialsId: 'docker-hub-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+		
+          docker.withRegistry('', 'docker-hub-credentials') {
+          sh "docker login -u ${USERNAME} -p ${PASSWORD}"
+           myImage.push("${env.BUILD_NUMBER}")
+           myImage.push("latest")
+         }
   }
 }
