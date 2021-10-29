@@ -17,5 +17,22 @@ pipeline {
         }
       }
     }
+    stage('Deploy image') { 
+22
+            steps { 
+23
+                script { 
+24
+                    docker.withRegistry( 'tle249/jekin1', registryCredential ) { 
+25
+                        dockerImage.push() 
+26
+                    }
+27
+                } 
+28
+            }
+29
+        } 
   }
 }
