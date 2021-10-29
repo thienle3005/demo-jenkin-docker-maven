@@ -1,43 +1,45 @@
-pipeline {
-    agent any
-    
-    environment {
-        DATE = new Date().format('yy.M')
-        TAG = "${DATE}.${BUILD_NUMBER}"
+node {
+
+    properties([
+            parameters([
+                    string(name: 'dockerRegistry',
+                            defaultValue: 'registry.hub.docker.com',
+                            description: 'The docker registry to use (DNS name only)',),
+                    string(name: 'dockerRepository',
+                            defaultValue: 'tle249/jenkin',
+                            description: 'The repository to push to',),
+                    string(name: 'dockerRegistryCredentialsId',
+                            defaultValue: 'dockerhub-jenkinfile-credentials',
+                            description: 'The Jenkins credentials id for docker registry to use',)
+            ])
+    ])
+
+    stage('Checkout') {
+        checkout scm
     }
-    stages {
-         stage('Maven Install') {
-      agent {
-        docker {
-          image 'maven:3.5.0'
-        }
-      }
-      steps {
-        sh 'mvn clean install'
-      }
-    }
-        stage ('Build') {
-            steps {
-                sh 'mvn clean package'
+
+    docker.image('maven:3.6.1-jdk-8').inside {
+        withMaven() {
+            stage('Maven Build') {
+                sh '"$MVN_CMD" clean package'
+            }
+
+            stage('Maven Deploy') {
+                sh '"$MVN_CMD" -DskipTests deploy'
             }
         }
+
+    }
+
+    docker.withRegistry("https://${dockerRegistry}", "${dockerRegistryCredentialsId}") {
+
         stage('Docker Build') {
-            steps {
-                script {
-                    docker.build("tle249/jenkin1:${TAG}")
-                }
-            }
+            image = docker.build("${dockerRegistry}/$(dockerRepository)", "--pull --no-cache .")
         }
-	    stage('Pushing Docker Image to Dockerhub') {
-            steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker_credential') {
-                        docker.image("tle249/jenkin1:${TAG}").push()
-                        docker.image("tle249/jenkin1:${TAG}").push("latest")
-                    }
-                }
-            }
+
+        stage('Docker Push') {
+            image.push()
         }
-        
     }
+
 }
