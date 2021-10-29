@@ -1,7 +1,7 @@
 pipeline {
   environment {
     registry = "tle249/jenkin1"
-    registryCredential = ‘dockerhub-jenkinfile-credentials’
+    registryCredential = "dockerhub-jenkinfile-credentials"
   }
   agent any
   stages {
