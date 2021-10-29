@@ -18,7 +18,7 @@ node {
         checkout scm
     }
 
-    docker.image('maven:3.6.1-jdk-8').inside {
+    docker.image('maven:3.8.3-openjdk-11').inside {
         withMaven() {
             stage('Maven Build') {
                 sh '"$MVN_CMD" clean package'
