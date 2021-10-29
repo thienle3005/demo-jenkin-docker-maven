@@ -6,7 +6,7 @@ node {
                             defaultValue: 'registry.hub.docker.com',
                             description: 'The docker registry to use (DNS name only)',),
                     string(name: 'dockerRepository',
-                            defaultValue: 'tle249/jenkin',
+                            defaultValue: 'tle249/jenkin1',
                             description: 'The repository to push to',),
                     string(name: 'dockerRegistryCredentialsId',
                             defaultValue: 'dockerhub-jenkinfile-credentials',
@@ -34,7 +34,7 @@ node {
     docker.withRegistry("https://${dockerRegistry}", "${dockerRegistryCredentialsId}") {
 
         stage('Docker Build') {
-            image = docker.build("${dockerRegistry}/$(dockerRepository)", "--pull --no-cache .")
+            image = docker.build('${dockerRegistry}/$(dockerRepository)', "--pull --no-cache .")
         }
 
         stage('Docker Push') {
