@@ -18,7 +18,7 @@ node {
         checkout scm
     }
 
-    docker.image('jenkin').inside {
+    docker.image('maven:3.6.1-jdk-8').inside {
         withMaven() {
             stage('Maven Build') {
                 sh '"$MVN_CMD" clean package'
