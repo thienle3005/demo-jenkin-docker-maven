@@ -1,45 +1,62 @@
-node {
-
-    properties([
-            parameters([
-                    string(name: 'dockerRegistry',
-                            defaultValue: 'registry.hub.docker.com',
-                            description: 'The docker registry to use (DNS name only)',),
-                    string(name: 'dockerRepository',
-                            defaultValue: 'tle249/jenkin1',
-                            description: 'The repository to push to',),
-                    string(name: 'dockerRegistryCredentialsId',
-                            defaultValue: 'dockerhub-jenkinfile-credentials',
-                            description: 'The Jenkins credentials id for docker registry to use',)
-            ])
-    ])
-
-    stage('Checkout') {
-        checkout scm
+ipeline { 
+2
+    environment { 
+3
+        registry = "tle249/jenkin1" 
+4
+        registryCredential = 'dockerhub-jenkinfile-credentials' 
+5
+        dockerImage = '' 
+6
     }
-
-    docker.image('maven:3.8.3').inside {
-        withMaven() {
-            stage('Maven Build') {
-                sh '"$MVN_CMD" clean package'
+7
+    agent any 
+8
+    stages { 
+9
+        
+        stage('Building our image') { 
+15
+            steps { 
+16
+                script { 
+17
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER" 
+18
+                }
+19
+            } 
+20
+        }
+21
+        stage('Deploy our image') { 
+22
+            steps { 
+23
+                script { 
+24
+                    docker.withRegistry( '', registryCredential ) { 
+25
+                        dockerImage.push() 
+26
+                    }
+27
+                } 
+28
             }
-
-            stage('Maven Deploy') {
-                sh '"$MVN_CMD" -DskipTests deploy'
+29
+        } 
+30
+        stage('Cleaning up') { 
+31
+            steps { 
+32
+                sh "docker rmi $registry:$BUILD_NUMBER" 
+33
             }
-        }
-
+34
+        } 
+35
     }
-
-    docker.withRegistry("https://${dockerRegistry}", "${dockerRegistryCredentialsId}") {
-
-        stage('Docker Build') {
-            image = docker.build('${dockerRegistry}/$(dockerRepository)', "--pull --no-cache .")
-        }
-
-        stage('Docker Push') {
-            image.push()
-        }
-    }
-
+36
 }
